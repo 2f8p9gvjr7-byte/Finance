@@ -108,6 +108,8 @@ function dessinerResumeImmo(pdfDoc, fonts, dureeAnalyse, params, resultat) {
   dessinerLigneCleVal(page, fonts, 48, y, "Capital restant dû à la sortie", fmtEURPdf(resultat.capitalRestantFinal) + "  (soldé sur le produit de la vente)"); y -= 20;
 
   y = dessinerSectionTitre(page, fonts, 48, y, "Fiscalité de sortie — plus-value immobilière", PDF_COULEURS.immobilier, largeur);
+  dessinerLigneCleVal(page, fonts, 48, y, "Frais d'acquisition retenus", params.modeFraisPV === "forfait" ? "Forfait 7,5 % du prix" : "Montant réel"); y -= 14;
+  dessinerLigneCleVal(page, fonts, 48, y, "Travaux retenus", params.modeTravauxPV === "forfait" ? "Forfait 15 % du prix" : "Montant réel"); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Plus-value brute estimée", fmtEURPdf(resultat.plusValueBrute)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Impôt IR (abattement " + fmtPctPdf(resultat.fiscalitePV.abattementIR) + ")", fmtEURPdf(resultat.fiscalitePV.impotIR)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Prélèvements sociaux (abattement " + fmtPctPdf(resultat.fiscalitePV.abattementPS) + ")", fmtEURPdf(resultat.fiscalitePV.impotPS)); y -= 14;
@@ -116,9 +118,15 @@ function dessinerResumeImmo(pdfDoc, fonts, dureeAnalyse, params, resultat) {
   }
   dessinerLigneCleVal(page, fonts, 48, y, "Total impôt à la revente", fmtEURPdf(resultat.fiscalitePV.total)); y -= 20;
 
-  page.drawText("Barème français en vigueur : 19 % IR + 17,2 % PS, abattements pour durée de détention", { x: 48, y, size: 8, font: fonts.regular, color: rgb(...PDF_COULEURS.sousTexte) });
-  y -= 11;
-  page.drawText("(exonération totale à 22 ans pour l'IR et 30 ans pour les PS), surtaxe au-delà de 50 000 € de plus-value nette.", { x: 48, y, size: 8, font: fonts.regular, color: rgb(...PDF_COULEURS.sousTexte) });
+  if (params.baremePlusValueIR === "reforme17ans") {
+    page.drawText("Barème IR simulé : exonération à 17 ans (amendement non retenu dans la LF2026 en l'état — hypothèse).", { x: 48, y, size: 8, font: fonts.regular, color: rgb(...PDF_COULEURS.sousTexte) });
+    y -= 11;
+    page.drawText("Prélèvements sociaux inchangés : 17,2 %, exonération totale à 30 ans.", { x: 48, y, size: 8, font: fonts.regular, color: rgb(...PDF_COULEURS.sousTexte) });
+  } else {
+    page.drawText("Barème français en vigueur : 19 % IR + 17,2 % PS, abattements pour durée de détention", { x: 48, y, size: 8, font: fonts.regular, color: rgb(...PDF_COULEURS.sousTexte) });
+    y -= 11;
+    page.drawText("(exonération totale à 22 ans pour l'IR et 30 ans pour les PS), surtaxe au-delà de 50 000 € de plus-value nette.", { x: 48, y, size: 8, font: fonts.regular, color: rgb(...PDF_COULEURS.sousTexte) });
+  }
 
   dessinerPiedDePage(page, fonts, largeur);
 }

@@ -12,6 +12,7 @@ const immo = {
   taxeFonciereInitiale: 900, tauxCroissanceTaxe: 0.02,
   tauxImpot: 0.30, tauxCredit: 0.035, dureeCredit: 20,
   tauxProgressionValeur: 0.02,
+  modeFraisPV: "reel", modeTravauxPV: "reel", baremePlusValueIR: "actuel",
 };
 
 const action = {
@@ -149,6 +150,13 @@ function lierFormulaire(prefix, data) {
   Object.keys(data).forEach((key) => {
     const el = document.getElementById(`${prefix}_${key}`);
     if (!el) return;
+    if (el.tagName === "SELECT") {
+      el.addEventListener("change", () => {
+        data[key] = el.value;
+        recalculer();
+      });
+      return;
+    }
     el.addEventListener("input", () => {
       const brut = parseFloat(el.value);
       const val = isNaN(brut) ? 0 : brut;

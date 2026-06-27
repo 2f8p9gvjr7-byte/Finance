@@ -47,22 +47,36 @@ function calculerSurtaxePlusValueElevee(plusValueNetteIR) {
 }
 
 // Calcule l'impôt sur la plus-value immobilière (investissement locatif, barème français en vigueur).
-function calculerImpotPlusValueImmo(plusValueBrute, dureeDetention) {
+function calculerImpotPlusValueImmo(plusValueBrute, dureeDetention, bareme = "actuel") {
   if (plusValueBrute <= 0) {
     return { impotIR: 0, impotPS: 0, surtaxe: 0, total: 0, abattementIR: 0, abattementPS: 0 };
   }
 
-  // Abattement IR (19%) : 6%/an de la 6e à la 21e année, exonération totale à 22 ans
+  // Abattement IR (19%) :
+  // - Barème actuel (en vigueur) : 6%/an de la 6e à la 21e année, exonération totale à 22 ans
+  // - Barème "réforme 17 ans" (amendement I-377, adopté en 1re lecture le 03/11/2025 puis écarté du texte
+  //   définitif de la LF2026 — conservé ici en option paramétrable au cas où une loi future le reprendrait) :
+  //   8%/an de la 6e à la 16e année, exonération totale à 17 ans
   let abattementIR = 0;
-  if (dureeDetention >= 22) {
-    abattementIR = 1;
-  } else if (dureeDetention > 5) {
-    const anneesAuDela5 = Math.min(dureeDetention - 5, 16);
-    abattementIR = anneesAuDela5 * 0.06;
+  if (bareme === "reforme17ans") {
+    if (dureeDetention >= 17) {
+      abattementIR = 1;
+    } else if (dureeDetention > 5) {
+      const anneesAuDela5 = Math.min(dureeDetention - 5, 11);
+      abattementIR = anneesAuDela5 * 0.08;
+    }
+  } else {
+    if (dureeDetention >= 22) {
+      abattementIR = 1;
+    } else if (dureeDetention > 5) {
+      const anneesAuDela5 = Math.min(dureeDetention - 5, 16);
+      abattementIR = anneesAuDela5 * 0.06;
+    }
   }
   abattementIR = Math.min(abattementIR, 1);
 
   // Abattement prélèvements sociaux (17,2%) : 1,65%/an de la 6e à la 21e, 1,60% la 22e, 9%/an de la 23e à la 30e
+  // Barème inchangé par la réforme à 17 ans (qui ne touche que l'IR) : toujours 30 ans pour une exonération totale.
   let abattementPS = 0;
   if (dureeDetention >= 30) {
     abattementPS = 1;
@@ -99,6 +113,15 @@ function calculerImmobilier(p, dureeAnalyse) {
     0
   );
 
+  // Frais et travaux retenus pour le calcul de la PLUS-VALUE FISCALE uniquement (majoration du prix
+  // d'acquisition) : au choix, montants réels saisis ou forfaits légaux (7,5 % frais, 15 % travaux si
+  // détention > 5 ans). Ce choix n'affecte ni la mise initiale réelle ni le montant emprunté.
+  const fraisRetenusPourPV = p.modeFraisPV === "forfait" ? p.prixBien * 0.075 : fraisAcquisition;
+  function travauxRetenusPourPV(dureeDetention) {
+    if (p.modeTravauxPV === "forfait" && dureeDetention > 5) return p.prixBien * 0.15;
+    return p.travauxInitiaux;
+  }
+
   const { mensualite, parAn } = tableauAmortissement(montantEmprunte, p.tauxCredit, p.dureeCredit, dureeAnalyse);
 
   const flux = [-miseInitiale];
@@ -125,9 +148,9 @@ function calculerImmobilier(p, dureeAnalyse) {
 
     const valeurBienAn = p.prixBien * Math.pow(1 + p.tauxProgressionValeur, an);
     const equiteAnBrute = valeurBienAn - dataCredit.capitalRestant;
-    const prixAcquisitionMajoreAn = p.prixBien + fraisAcquisition + p.travauxInitiaux;
+    const prixAcquisitionMajoreAn = p.prixBien + fraisRetenusPourPV + travauxRetenusPourPV(an);
     const plusValueBruteAn = Math.max(valeurBienAn - prixAcquisitionMajoreAn, 0);
-    const fiscaliteAn = calculerImpotPlusValueImmo(plusValueBruteAn, an);
+    const fiscaliteAn = calculerImpotPlusValueImmo(plusValueBruteAn, an, p.baremePlusValueIR);
     const equiteAn = equiteAnBrute - fiscaliteAn.total;
 
     detailAnnuel.push({
@@ -144,9 +167,9 @@ function calculerImmobilier(p, dureeAnalyse) {
   const capitalRestantFinal = parAn[dureeAnalyse - 1]?.capitalRestant || 0;
   const equiteNetteBrute = valeurFutureBien - capitalRestantFinal;
 
-  const prixAcquisitionMajore = p.prixBien + fraisAcquisition + p.travauxInitiaux;
+  const prixAcquisitionMajore = p.prixBien + fraisRetenusPourPV + travauxRetenusPourPV(dureeAnalyse);
   const plusValueBrute = Math.max(valeurFutureBien - prixAcquisitionMajore, 0);
-  const fiscalitePV = calculerImpotPlusValueImmo(plusValueBrute, dureeAnalyse);
+  const fiscalitePV = calculerImpotPlusValueImmo(plusValueBrute, dureeAnalyse, p.baremePlusValueIR);
   const equiteNetteFinale = equiteNetteBrute - fiscalitePV.total;
 
   const fluxAvecSortie = [...flux];

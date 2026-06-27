@@ -124,6 +124,16 @@ html, body {
 .champ-input:focus { border-color: var(--amber); }
 .champ-suffix { position: absolute; right: 9px; font-size: 11px; color: var(--mut); pointer-events: none; }
 
+select.champ-input {
+  padding: 8px 8px;
+  cursor: pointer;
+  font-size: 12.5px;
+}
+select.champ-input option {
+  background: var(--bg);
+  color: var(--txt);
+}
+
 .note-fiscale {
   font-size: 11px; color: var(--mut); font-style: italic; line-height: 1.5;
   padding-top: 10px; margin-top: 10px; border-top: 1px dashed var(--bor);
