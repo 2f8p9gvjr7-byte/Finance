@@ -46,7 +46,7 @@ function calculerSurtaxePlusValueElevee(plusValueNetteIR) {
   return 0.06 * pv;
 }
 
-// Calcule l'impôt sur la plus-value immobilière (investissement locatif, barème français en vigueur).
+// Calcule l'impôt sur la plus-value immobilière (investissement locatif, barème en vigueur).
 function calculerImpotPlusValueImmo(plusValueBrute, dureeDetention, bareme = "actuel") {
   if (plusValueBrute <= 0) {
     return { impotIR: 0, impotPS: 0, surtaxe: 0, total: 0, abattementIR: 0, abattementPS: 0 };

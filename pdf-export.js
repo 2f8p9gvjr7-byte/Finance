@@ -123,7 +123,7 @@ function dessinerResumeImmo(pdfDoc, fonts, dureeAnalyse, params, resultat) {
     y -= 11;
     page.drawText("Prélèvements sociaux inchangés : 17,2 %, exonération totale à 30 ans.", { x: 48, y, size: 8, font: fonts.regular, color: rgb(...PDF_COULEURS.sousTexte) });
   } else {
-    page.drawText("Barème français en vigueur : 19 % IR + 17,2 % PS, abattements pour durée de détention", { x: 48, y, size: 8, font: fonts.regular, color: rgb(...PDF_COULEURS.sousTexte) });
+    page.drawText("Barème en vigueur : 19 % IR + 17,2 % PS, abattements pour durée de détention", { x: 48, y, size: 8, font: fonts.regular, color: rgb(...PDF_COULEURS.sousTexte) });
     y -= 11;
     page.drawText("(exonération totale à 22 ans pour l'IR et 30 ans pour les PS), surtaxe au-delà de 50 000 € de plus-value nette.", { x: 48, y, size: 8, font: fonts.regular, color: rgb(...PDF_COULEURS.sousTexte) });
   }
