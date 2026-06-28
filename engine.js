@@ -146,7 +146,9 @@ function calculerImmobilier(p, dureeAnalyse) {
     flux.push(cashFlow);
     cashFlowCumuleProgressif += cashFlow;
 
-    const valeurBienAn = p.prixBien * Math.pow(1 + p.tauxProgressionValeur, an);
+    // Base de valorisation = prix d'achat + travaux réels (la remise en état fait partie de la valeur
+    // réelle du bien dès l'achat, indépendamment du forfait fiscal éventuellement retenu pour la PV).
+    const valeurBienAn = (p.prixBien + p.travauxInitiaux) * Math.pow(1 + p.tauxProgressionValeur, an);
     const equiteAnBrute = valeurBienAn - dataCredit.capitalRestant;
     const prixAcquisitionMajoreAn = p.prixBien + fraisRetenusPourPV + travauxRetenusPourPV(an);
     const plusValueBruteAn = Math.max(valeurBienAn - prixAcquisitionMajoreAn, 0);
@@ -163,7 +165,7 @@ function calculerImmobilier(p, dureeAnalyse) {
     courbeValeurNette.push({ an, valeur: valeurNetteAn });
   }
 
-  const valeurFutureBien = p.prixBien * Math.pow(1 + p.tauxProgressionValeur, dureeAnalyse);
+  const valeurFutureBien = (p.prixBien + p.travauxInitiaux) * Math.pow(1 + p.tauxProgressionValeur, dureeAnalyse);
   const capitalRestantFinal = parAn[dureeAnalyse - 1]?.capitalRestant || 0;
   const equiteNetteBrute = valeurFutureBien - capitalRestantFinal;
 
@@ -291,6 +293,16 @@ function calculerAssuranceVie(p, dureeAnalyse) {
 }
 
 function calculerTRI(flux, guess = 0.08) {
+  // Cas particulier à 2 flux (un seul investissement, un seul retour) : solution analytique exacte,
+  // Newton-Raphson peut diverger sur un cas aussi dégénéré faute de courbure suffisante.
+  const nonZero = flux.map((v, i) => [i, v]).filter(([, v]) => v !== 0);
+  if (nonZero.length === 2 && nonZero[0][1] < 0 && nonZero[1][1] > 0) {
+    const [t0, v0] = nonZero[0];
+    const [t1, v1] = nonZero[1];
+    const n = t1 - t0;
+    if (n > 0) return Math.pow(v1 / -v0, 1 / n) - 1;
+  }
+
   let taux = guess;
   for (let iter = 0; iter < 200; iter++) {
     let npv = 0;
@@ -302,6 +314,9 @@ function calculerTRI(flux, guess = 0.08) {
     if (Math.abs(dNpv) < 1e-10) break;
     const nouveauTaux = taux - npv / dNpv;
     if (!isFinite(nouveauTaux)) return null;
+    // Garde-fou : un TRI annuel hors de [-99%, +500%] signale une divergence numérique, pas un résultat
+    // économiquement plausible pour ce type de simulation ; on arrête plutôt que de renvoyer une valeur absurde.
+    if (nouveauTaux < -0.99 || nouveauTaux > 5) return null;
     if (Math.abs(nouveauTaux - taux) < 1e-9) return nouveauTaux;
     taux = nouveauTaux;
   }
