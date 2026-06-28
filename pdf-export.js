@@ -105,7 +105,12 @@ function dessinerResumeImmo(pdfDoc, fonts, dureeAnalyse, params, resultat) {
   dessinerLigneCleVal(page, fonts, 48, y, "Valeur finale nette (patrimoine total)", fmtEURPdf(resultat.valeurFinaleNette)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Cash-flow cumulé (hors valeur de sortie)", fmtEURPdf(resultat.cashFlowCumule)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Multiple sur la mise initiale", (resultat.valeurFinaleNette / resultat.miseInitiale).toFixed(2) + "x"); y -= 14;
-  dessinerLigneCleVal(page, fonts, 48, y, "Capital restant dû à la sortie", fmtEURPdf(resultat.capitalRestantFinal) + "  (soldé sur le produit de la vente)"); y -= 20;
+  dessinerLigneCleVal(page, fonts, 48, y, "Capital restant dû à la sortie", fmtEURPdf(resultat.capitalRestantFinal) + "  (soldé sur le produit de la vente)"); y -= 14;
+  if (resultat.van !== undefined) {
+    dessinerLigneCleVal(page, fonts, 48, y, "VAN au taux d'actualisation choisi", fmtEURPdf(resultat.van)); y -= 14;
+    dessinerLigneCleVal(page, fonts, 48, y, "Valeur future (VAN capitalisée)", fmtEURPdf(resultat.valeurFutureVAN)); y -= 14;
+  }
+  y -= 6;
 
   y = dessinerSectionTitre(page, fonts, 48, y, "Fiscalité de sortie — plus-value immobilière", PDF_COULEURS.immobilier, largeur);
   dessinerLigneCleVal(page, fonts, 48, y, "Frais d'acquisition retenus", params.modeFraisPV === "forfait" ? "Forfait 7,5 % du prix" : "Montant réel"); y -= 14;
@@ -148,7 +153,12 @@ function dessinerResumeTitre(pdfDoc, fonts, dureeAnalyse, nom, couleur, params, 
   dessinerLigneCleVal(page, fonts, 48, y, "Valeur finale nette (patrimoine total)", fmtEURPdf(resultat.valeurFinaleNette)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Cash-flow cumulé (hors valeur de sortie)", fmtEURPdf(resultat.cashFlowCumule)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Multiple sur la mise initiale", (resultat.valeurFinaleNette / resultat.miseInitiale).toFixed(2) + "x"); y -= 14;
-  dessinerLigneCleVal(page, fonts, 48, y, "Valeur future nette d'impôt à la sortie", fmtEURPdf(resultat.valeurFutureNette)); y -= 20;
+  dessinerLigneCleVal(page, fonts, 48, y, "Valeur future nette d'impôt à la sortie", fmtEURPdf(resultat.valeurFutureNette)); y -= 14;
+  if (resultat.van !== undefined) {
+    dessinerLigneCleVal(page, fonts, 48, y, "VAN au taux d'actualisation choisi", fmtEURPdf(resultat.van)); y -= 14;
+    dessinerLigneCleVal(page, fonts, 48, y, "Valeur future (VAN capitalisée)", fmtEURPdf(resultat.valeurFutureVAN)); y -= 14;
+  }
+  y -= 6;
 
   page.drawText("Le tableau annuel détaillé (revenu, impôt, valeur de marché) figure en annexe.", { x: 48, y, size: 8, font: fonts.regular, color: rgb(...PDF_COULEURS.sousTexte) });
 
@@ -172,7 +182,12 @@ function dessinerResumeAv(pdfDoc, fonts, dureeAnalyse, params, resultat) {
   dessinerLigneCleVal(page, fonts, 48, y, "Valeur brute du contrat", fmtEURPdf(resultat.valeurFinaleBrute)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Gains réalisés", fmtEURPdf(resultat.gainsFinaux)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Valeur finale nette (patrimoine total)", fmtEURPdf(resultat.valeurFinaleNette)); y -= 14;
-  dessinerLigneCleVal(page, fonts, 48, y, "Multiple sur la mise initiale", (resultat.valeurFinaleNette / resultat.miseInitiale).toFixed(2) + "x"); y -= 20;
+  dessinerLigneCleVal(page, fonts, 48, y, "Multiple sur la mise initiale", (resultat.valeurFinaleNette / resultat.miseInitiale).toFixed(2) + "x"); y -= 14;
+  if (resultat.van !== undefined) {
+    dessinerLigneCleVal(page, fonts, 48, y, "VAN au taux d'actualisation choisi", fmtEURPdf(resultat.van)); y -= 14;
+    dessinerLigneCleVal(page, fonts, 48, y, "Valeur future (VAN capitalisée)", fmtEURPdf(resultat.valeurFutureVAN)); y -= 14;
+  }
+  y -= 6;
 
   y = dessinerSectionTitre(page, fonts, 48, y, "Fiscalité de sortie (rachat total)", PDF_COULEURS.av, largeur);
   dessinerLigneCleVal(page, fonts, 48, y, "Abattement appliqué", fmtEURPdf(resultat.abattementApplique)); y -= 14;
@@ -307,13 +322,13 @@ async function exporterPdfAv(params, resultat, dureeAnalyse) {
 // EXPORT GLOBAL — les 5 supports dans un seul PDF
 // ============================================================
 
-async function exporterPdfGlobal(donnees, dureeAnalyse) {
+async function exporterPdfGlobal(donnees, dureeAnalyse, tauxActualisation) {
   const { PDFDocument } = PDFLib;
   const pdfDoc = await PDFDocument.create();
   const fonts = await chargerPolicesPdf(pdfDoc);
 
   // Page de garde comparative
-  dessinerPageGardeGlobale(pdfDoc, fonts, donnees, dureeAnalyse);
+  dessinerPageGardeGlobale(pdfDoc, fonts, donnees, dureeAnalyse, tauxActualisation);
 
   // Résumé + annexe pour chaque support, à la suite
   dessinerResumeImmo(pdfDoc, fonts, dureeAnalyse, donnees.immo.params, donnees.immo.resultat);
@@ -355,7 +370,7 @@ async function exporterPdfGlobal(donnees, dureeAnalyse) {
   return pdfDoc.save();
 }
 
-function dessinerPageGardeGlobale(pdfDoc, fonts, donnees, dureeAnalyse) {
+function dessinerPageGardeGlobale(pdfDoc, fonts, donnees, dureeAnalyse, tauxActualisation) {
   const rgb = window.PDFLib.rgb;
   const { page, largeur } = nouvellePagePdf(pdfDoc);
   let y = 793;
@@ -363,7 +378,7 @@ function dessinerPageGardeGlobale(pdfDoc, fonts, donnees, dureeAnalyse) {
   page.drawRectangle({ x: 0, y: y - 60, width: 595.28, height: 90, color: rgb(...PDF_COULEURS.encre) });
   page.drawText("COMPARATEUR DE RENDEMENTS", { x: 48, y: y - 10, size: 11, font: fonts.bold, color: rgb(0.96, 0.65, 0.14) });
   page.drawText("Synthèse comparative — Immobilier · Action · Obligation · ETF · Assurance-vie", { x: 48, y: y - 28, size: 10, font: fonts.regular, color: rgb(0.9, 0.9, 0.93) });
-  page.drawText(`Durée d'analyse : ${dureeAnalyse} ans`, { x: 48, y: y - 44, size: 10, font: fonts.regular, color: rgb(0.9, 0.9, 0.93) });
+  page.drawText(`Durée d'analyse : ${dureeAnalyse} ans  ·  Taux d'actualisation (VAN) : ${fmtPctPdf(tauxActualisation)}`, { x: 48, y: y - 44, size: 10, font: fonts.regular, color: rgb(0.9, 0.9, 0.93) });
   y -= 100;
 
   const ordre = [
@@ -377,8 +392,8 @@ function dessinerPageGardeGlobale(pdfDoc, fonts, donnees, dureeAnalyse) {
   y = dessinerSectionTitre(page, fonts, 48, y, "Résultats comparatifs", PDF_COULEURS.encre, largeur);
   y -= 4;
 
-  const colLargeurs = [110, 70, 110, 110, 90];
-  const enTetes = ["Support", "TRI", "Valeur finale nette", "Cash-flow cumulé", "Multiple"];
+  const colLargeurs = [105, 65, 105, 105, 85];
+  const enTetes = ["Support", "TRI", "Valeur finale nette", "VAN", "Multiple"];
   let x = 48;
   enTetes.forEach((h, i) => {
     page.drawText(h, { x, y, size: 8.5, font: fonts.bold, color: rgb(...PDF_COULEURS.sousTexte) });
@@ -395,7 +410,7 @@ function dessinerPageGardeGlobale(pdfDoc, fonts, donnees, dureeAnalyse) {
     page.drawText(nom, { x: x + 8, y, size: 9, font: fonts.bold, color: rgb(...PDF_COULEURS.texte) }); x += colLargeurs[0];
     page.drawText(fmtPctPdf(r.tri), { x, y, size: 9, font: fonts.regular, color: rgb(...PDF_COULEURS.texte) }); x += colLargeurs[1];
     page.drawText(fmtEURPdf(r.valeurFinaleNette), { x, y, size: 9, font: fonts.regular, color: rgb(...PDF_COULEURS.texte) }); x += colLargeurs[2];
-    page.drawText(fmtEURPdf(r.cashFlowCumule), { x, y, size: 9, font: fonts.regular, color: rgb(...PDF_COULEURS.texte) }); x += colLargeurs[3];
+    page.drawText(fmtEURPdf(r.van), { x, y, size: 9, font: fonts.regular, color: rgb(...PDF_COULEURS.texte) }); x += colLargeurs[3];
     page.drawText((r.valeurFinaleNette / r.miseInitiale).toFixed(2) + "x", { x, y, size: 9, font: fonts.regular, color: rgb(...PDF_COULEURS.texte) });
     y -= 18;
   });

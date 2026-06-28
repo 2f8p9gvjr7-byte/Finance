@@ -292,6 +292,23 @@ function calculerAssuranceVie(p, dureeAnalyse) {
   };
 }
 
+// Valeur Actuelle Nette des flux à un taux d'actualisation donné (ex: taux sans risque choisi par l'utilisateur).
+// Complémentaire au TRI : exprime en euros la création de valeur au taux d'exigence retenu,
+// plutôt que de chercher le taux qui annule la VAN (ce qu'est justement le TRI).
+function calculerVAN(flux, tauxActualisation) {
+  let van = 0;
+  for (let t = 0; t < flux.length; t++) {
+    van += flux[t] / Math.pow(1 + tauxActualisation, t);
+  }
+  return van;
+}
+
+// Valeur future = la VAN capitalisée jusqu'à l'horizon (mathématiquement identique à la somme
+// de chaque flux capitalisé individuellement jusqu'à la même date).
+function calculerValeurFutureVAN(van, tauxActualisation, dureeAnalyse) {
+  return van * Math.pow(1 + tauxActualisation, dureeAnalyse);
+}
+
 function calculerTRI(flux, guess = 0.08) {
   // Cas particulier à 2 flux (un seul investissement, un seul retour) : solution analytique exacte,
   // Newton-Raphson peut diverger sur un cas aussi dégénéré faute de courbure suffisante.

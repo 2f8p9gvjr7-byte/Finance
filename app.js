@@ -3,6 +3,7 @@
 // ============================================================
 
 let dureeAnalyse = 15;
+let tauxActualisation = 0.02;
 
 const immo = {
   prixBien: 200000, apport: 40000, fraisAcquisitionPct: 0.08, travauxInitiaux: 5000,
@@ -178,6 +179,12 @@ document.getElementById("dureeAnalyse").addEventListener("input", (e) => {
   recalculer();
 });
 
+document.getElementById("tauxActualisation").addEventListener("input", (e) => {
+  tauxActualisation = parseFloat(e.target.value) / 100;
+  document.getElementById("tauxActualisationVal").textContent = `${parseFloat(e.target.value).toFixed(1).replace(".", ",")} %`;
+  recalculer();
+});
+
 // ============================================================
 // BOUTON "SYNCHRONISER" — recopie la mise totale immobilière
 // ============================================================
@@ -244,6 +251,10 @@ function carteResultatHtml(cle, r) {
         <div><div class="resultat-val">${fmtEUR(r.cashFlowCumule)}</div><div class="resultat-sub">Cash-flow cumulé</div></div>
         <div><div class="resultat-val">${multiple !== null ? multiple.toFixed(2) + "x" : "—"}</div><div class="resultat-sub">Multiple sur mise</div></div>
         <div><div class="resultat-val">${fmtEUR(r.miseInitiale)}</div><div class="resultat-sub">Mise initiale</div></div>
+      </div>
+      <div class="resultat-grille resultat-grille-van">
+        <div><div class="resultat-val resultat-val-van">${fmtEUR(r.van)}</div><div class="resultat-sub">VAN au taux choisi</div></div>
+        <div><div class="resultat-val resultat-val-van">${fmtEUR(r.valeurFutureVAN)}</div><div class="resultat-sub">Valeur future (VAN capitalisée)</div></div>
       </div>
     </div>`;
 }
@@ -384,12 +395,18 @@ function recalculer() {
   const rEtf = calculerTitreFinancier(etf, dureeAnalyse);
   const rAv = calculerAssuranceVie(av, dureeAnalyse);
 
+  function avecVAN(r) {
+    const van = calculerVAN(r.flux, tauxActualisation);
+    const valeurFutureVAN = calculerValeurFutureVAN(van, tauxActualisation, dureeAnalyse);
+    return { ...r, tri: calculerTRI(r.flux), van, valeurFutureVAN };
+  }
+
   const resultats = {
-    immobilier: { ...rImmo, tri: calculerTRI(rImmo.flux) },
-    action: { ...rAction, tri: calculerTRI(rAction.flux) },
-    obligation: { ...rObligation, tri: calculerTRI(rObligation.flux) },
-    etf: { ...rEtf, tri: calculerTRI(rEtf.flux) },
-    av: { ...rAv, tri: calculerTRI(rAv.flux) },
+    immobilier: avecVAN(rImmo),
+    action: avecVAN(rAction),
+    obligation: avecVAN(rObligation),
+    etf: avecVAN(rEtf),
+    av: avecVAN(rAv),
   };
   derniersResultats = resultats;
 
@@ -463,7 +480,7 @@ document.getElementById("btnExportTout").addEventListener("click", async () => {
       etf: { params: etf, resultat: derniersResultats.etf },
       av: { params: av, resultat: derniersResultats.av },
     };
-    const bytes = await exporterPdfGlobal(donnees, dureeAnalyse);
+    const bytes = await exporterPdfGlobal(donnees, dureeAnalyse, tauxActualisation);
     telechargerPdf(bytes, nomFichierPdf("synthese-globale"));
   } catch (e) {
     console.error("Erreur export PDF global:", e);

@@ -26,10 +26,17 @@
         <div class="logo-sub">Immobilier · Action · Obligation · ETF · Assurance-vie</div>
       </div>
     </div>
-    <div class="duree-control">
-      <label for="dureeAnalyse">Durée</label>
-      <input type="range" id="dureeAnalyse" min="1" max="40" value="15">
-      <span class="duree-val mono" id="dureeVal">15 ans</span>
+    <div class="controles-transverses">
+      <div class="duree-control">
+        <label for="dureeAnalyse">Durée</label>
+        <input type="range" id="dureeAnalyse" min="1" max="40" value="15">
+        <span class="duree-val mono" id="dureeVal">15 ans</span>
+      </div>
+      <div class="duree-control">
+        <label for="tauxActualisation">Taux d'actualisation (VAN)</label>
+        <input type="range" id="tauxActualisation" min="0" max="10" step="0.1" value="2">
+        <span class="duree-val mono" id="tauxActualisationVal">2,0 %</span>
+      </div>
     </div>
   </div>
 

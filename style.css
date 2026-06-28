@@ -29,6 +29,11 @@ html, body {
 .logo-title { font-size: 18px; font-weight: 900; color: var(--amber); letter-spacing: 1.5px; }
 .logo-sub { font-size: 11px; color: var(--sub); letter-spacing: 0.5px; margin-top: 2px; }
 
+.controles-transverses {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .duree-control {
   display: flex; align-items: center; gap: 10px;
   background: var(--pan); border: 1px solid var(--bor);
@@ -160,6 +165,8 @@ select.champ-input option {
 .resultat-tri { font-size: 28px; font-weight: 900; line-height: 1; color: var(--txt); }
 .resultat-tri-label { font-size: 10.5px; color: var(--mut); margin-bottom: 12px; }
 .resultat-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; padding-top: 11px; border-top: 1px solid var(--bor); }
+.resultat-grille-van { margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--bor); }
+.resultat-val-van { color: var(--c); }
 .resultat-val { font-family: 'SF Mono', monospace; font-size: 13px; color: var(--txt); font-weight: 600; }
 .resultat-sub { font-size: 10px; color: var(--mut); margin-top: 2px; }
 
@@ -182,6 +189,7 @@ select.champ-input option {
 /* ===== RESPONSIVE ===== */
 @media (max-width: 640px) {
   .section-grille { grid-template-columns: 1fr; }
+  .controles-transverses { width: 100%; flex-direction: column; }
   .duree-control { width: 100%; justify-content: space-between; }
   .duree-control input[type="range"] { flex: 1; }
   .header-top { flex-direction: column; align-items: stretch; }
