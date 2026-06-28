@@ -225,6 +225,7 @@ function calculerTitreFinancier(p, dureeAnalyse) {
 
   return {
     miseInitiale: p.miseInitiale, flux: fluxAvecSortie, detailAnnuel,
+    valeurFutureBrute, plusValue, impotPlusValue,
     valeurFutureNette, cashFlowCumule, valeurFinaleNette,
     gainNet,
     courbeValeurNette

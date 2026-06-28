@@ -103,8 +103,9 @@ function dessinerResumeImmo(pdfDoc, fonts, dureeAnalyse, params, resultat) {
   y = dessinerSectionTitre(page, fonts, 48, y, "Résultat à l'échéance (" + dureeAnalyse + " ans)", PDF_COULEURS.immobilier, largeur);
   dessinerLigneCleVal(page, fonts, 48, y, "TRI annuel", fmtPctPdf(resultat.tri)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Valeur finale nette (patrimoine total)", fmtEURPdf(resultat.valeurFinaleNette)); y -= 14;
-  dessinerLigneCleVal(page, fonts, 48, y, "Cash-flow cumulé (hors valeur de sortie)", fmtEURPdf(resultat.cashFlowCumule)); y -= 14;
+  dessinerLigneCleVal(page, fonts, 48, y, "Cash-flow cumulé (mise comprise, hors revente)", fmtEURPdf(resultat.cashFlowCumule)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Multiple sur la mise initiale", (resultat.valeurFinaleNette / resultat.miseInitiale).toFixed(2) + "x"); y -= 14;
+  dessinerLigneCleVal(page, fonts, 48, y, "Valeur de revente brute estimée du bien", fmtEURPdf(resultat.valeurFutureBien)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Capital restant dû à la sortie", fmtEURPdf(resultat.capitalRestantFinal) + "  (soldé sur le produit de la vente)"); y -= 14;
   if (resultat.van !== undefined) {
     dessinerLigneCleVal(page, fonts, 48, y, "VAN au taux d'actualisation choisi", fmtEURPdf(resultat.van)); y -= 14;
@@ -151,9 +152,14 @@ function dessinerResumeTitre(pdfDoc, fonts, dureeAnalyse, nom, couleur, params, 
   y = dessinerSectionTitre(page, fonts, 48, y, "Résultat à l'échéance (" + dureeAnalyse + " ans)", couleur, largeur);
   dessinerLigneCleVal(page, fonts, 48, y, "TRI annuel", fmtPctPdf(resultat.tri)); y -= 14;
   dessinerLigneCleVal(page, fonts, 48, y, "Valeur finale nette (patrimoine total)", fmtEURPdf(resultat.valeurFinaleNette)); y -= 14;
-  dessinerLigneCleVal(page, fonts, 48, y, "Cash-flow cumulé (hors valeur de sortie)", fmtEURPdf(resultat.cashFlowCumule)); y -= 14;
-  dessinerLigneCleVal(page, fonts, 48, y, "Multiple sur la mise initiale", (resultat.valeurFinaleNette / resultat.miseInitiale).toFixed(2) + "x"); y -= 14;
-  dessinerLigneCleVal(page, fonts, 48, y, "Valeur future nette d'impôt à la sortie", fmtEURPdf(resultat.valeurFutureNette)); y -= 14;
+  dessinerLigneCleVal(page, fonts, 48, y, "Cash-flow cumulé (mise comprise, hors revente)", fmtEURPdf(resultat.cashFlowCumule)); y -= 14;
+  dessinerLigneCleVal(page, fonts, 48, y, "Multiple sur la mise initiale", (resultat.valeurFinaleNette / resultat.miseInitiale).toFixed(2) + "x"); y -= 20;
+
+  y = dessinerSectionTitre(page, fonts, 48, y, "Valeur de revente estimée à l'échéance", couleur, largeur);
+  dessinerLigneCleVal(page, fonts, 48, y, "Valeur de revente brute estimée", fmtEURPdf(resultat.valeurFutureBrute)); y -= 14;
+  dessinerLigneCleVal(page, fonts, 48, y, "Plus-value brute", fmtEURPdf(resultat.plusValue)); y -= 14;
+  dessinerLigneCleVal(page, fonts, 48, y, "Impôt sur la plus-value", fmtEURPdf(resultat.impotPlusValue)); y -= 14;
+  dessinerLigneCleVal(page, fonts, 48, y, "Valeur de revente nette d'impôt", fmtEURPdf(resultat.valeurFutureNette)); y -= 14;
   if (resultat.van !== undefined) {
     dessinerLigneCleVal(page, fonts, 48, y, "VAN au taux d'actualisation choisi", fmtEURPdf(resultat.van)); y -= 14;
     dessinerLigneCleVal(page, fonts, 48, y, "Valeur future (VAN capitalisée)", fmtEURPdf(resultat.valeurFutureVAN)); y -= 14;

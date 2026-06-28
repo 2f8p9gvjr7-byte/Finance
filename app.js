@@ -101,6 +101,10 @@ function genererFormulaireTitre(prefix, data, labelRevenu) {
         ${champHtml(`${prefix}_tauxProgressionValeur`, "Progression valeur", (data.tauxProgressionValeur * 100).toFixed(2), "%", 0.1)}
         ${champHtml(`${prefix}_tauxImpotPlusValue`, "Impôt sur plus-value", (data.tauxImpotPlusValue * 100).toFixed(2), "%", 0.1)}
       </div>
+    </div>
+    <div class="note-fiscale">
+      Le "cash-flow cumulé" affiché dans les résultats inclut la mise initiale (en négatif) et les revenus perçus, mais pas la revente. La valeur de revente est calculée séparément ci-dessous.
+      <div class="detail-fiscal-chiffre" id="detailFiscal${prefix.charAt(0).toUpperCase() + prefix.slice(1)}"></div>
     </div>`;
 }
 
@@ -248,7 +252,7 @@ function carteResultatHtml(cle, r) {
       <div class="resultat-tri-label">TRI annuel</div>
       <div class="resultat-grille">
         <div><div class="resultat-val">${fmtEUR(r.valeurFinaleNette)}</div><div class="resultat-sub">Valeur finale nette</div></div>
-        <div><div class="resultat-val">${fmtEUR(r.cashFlowCumule)}</div><div class="resultat-sub">Cash-flow cumulé</div></div>
+        <div><div class="resultat-val">${fmtEUR(r.cashFlowCumule)}</div><div class="resultat-sub">Cash-flow cumulé (mise comprise)</div></div>
         <div><div class="resultat-val">${multiple !== null ? multiple.toFixed(2) + "x" : "—"}</div><div class="resultat-sub">Multiple sur mise</div></div>
         <div><div class="resultat-val">${fmtEUR(r.miseInitiale)}</div><div class="resultat-sub">Mise initiale</div></div>
       </div>
@@ -382,6 +386,18 @@ function rendreDetailFiscalAv(r) {
   document.getElementById("detailFiscalAv").innerHTML = html;
 }
 
+function rendreDetailFiscalTitre(prefix, r) {
+  const id = `detailFiscal${prefix.charAt(0).toUpperCase() + prefix.slice(1)}`;
+  const el = document.getElementById(id);
+  if (!el) return;
+  const html = `
+    <span>Valeur de revente brute estimée : <strong>${fmtEUR(r.valeurFutureBrute)}</strong></span>
+    <span>Plus-value brute : ${fmtEUR(r.plusValue)}</span>
+    <span>Impôt sur la plus-value : ${fmtEUR(r.impotPlusValue)}</span>
+    <span class="detail-fiscal-total">Valeur de revente nette d'impôt : <strong>${fmtEUR(r.valeurFutureNette)}</strong></span>`;
+  el.innerHTML = html;
+}
+
 // ============================================================
 // BOUCLE DE RECALCUL PRINCIPALE
 // ============================================================
@@ -420,6 +436,9 @@ function recalculer() {
     carteResultatHtml("av", resultats.av);
 
   rendreDetailFiscalImmo(resultats.immobilier);
+  rendreDetailFiscalTitre("action", resultats.action);
+  rendreDetailFiscalTitre("obligation", resultats.obligation);
+  rendreDetailFiscalTitre("etf", resultats.etf);
   rendreDetailFiscalAv(resultats.av);
   dessinerGraphique(resultats);
 }
